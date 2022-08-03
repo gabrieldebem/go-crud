@@ -1,0 +1,36 @@
+version: "3.7"
+services:
+  psql:
+    image: postgres:14
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=crud
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    restart: always
+    command:
+      - postgres
+    healthcheck:
+      test: ["CMD", "psql", "-U", "postgres", "-c", "SELECT 1"]
+      retries: 3
+      timeout: 1s
+      interval: 1s
+      start_period: 1s
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - psql
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:8080"]
+      retries: 3
+      timeout: 1s
+      interval: 1s
+      start_period: 1s
