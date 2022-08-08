@@ -3,60 +3,63 @@ package repositories
 import (
 	"github.com/go-crud/pkg/forms"
 	"github.com/go-crud/pkg/models"
+	"gorm.io/gorm"
 )
 
 type UserRepository struct {
 	Repository DefaultRepository
 }
 
-func (r UserRepository) Index() (users []models.User, err error) {
-	db := r.Repository.db()
+var db *gorm.DB
 
+func init() {
+	db = UserRepository{}.Repository.db()
+}
+
+func (r UserRepository) Index() (users []models.User, err error) {
 	err = db.Find(&users).Error
 	return
 }
 
 func (r UserRepository) Show(id string) (user models.User, err error) {
-	db := r.Repository.db()
-
 	err = db.First(&user, id).Error
 	return
 }
 
 func (r UserRepository) Store(form forms.StoreUserForm) (user models.User, err error) {
-	db := r.Repository.db()
+	user = models.User{
+		Name:     form.Name,
+		Email:    form.Email,
+		Password: form.Password,
+	}
 
-	user = models.User{}
-	user.Name = form.Name
-	user.Email = form.Email
-	user.Password, err = user.HashPassword(form.Password)
-
-	db.Save(&user)
+	err = db.Create(&user).Error
 
 	return
 }
 
 func (r UserRepository) Update(id string, form forms.UpdateUserForm) (user models.User, err error) {
-	db := r.Repository.db()
+	err = db.Model(&user).Where("id = ?", id).Updates(models.User{
+		Name:  form.Name,
+		Email: form.Email,
+	}).Error
 
-	err = db.Find(&user, id).Error
+	return
+}
 
-	if err != nil {
-		return
-	}
-
-	user.Name = form.Name
-	user.Email = form.Email
-	user.Password, err = user.HashPassword(form.Password)
-
-	db.Save(&user)
+func (r UserRepository) UpdatePassword(id string, form forms.UpdateUserPassword) (err error) {
+	err = db.Model(&models.User{}).Where(
+		"id = ?",
+		id,
+	).Update(
+		"password",
+		form.Password,
+	).Error
 
 	return
 }
 
 func (r UserRepository) Destroy(id string) (err error) {
-	db := r.Repository.db()
-
 	err = db.Delete(&models.User{}, id).Error
 
 	return

@@ -16,7 +16,12 @@ func main() {
 	route.GET("/users/:user", handlers.UserHandler{}.Show)
 	route.POST("/users/", handlers.UserHandler{}.Store)
 	route.PUT("/users/:user", handlers.UserHandler{}.Update)
+	route.PUT("/users/:user/password", handlers.UserHandler{}.UpdatePassword)
 	route.DELETE("/users/:user", handlers.UserHandler{}.Destroy)
 
-	route.Run(":8080")
+	err := route.Run(":8080")
+
+	if err != nil {
+		panic(err)
+	}
 }

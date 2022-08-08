@@ -3,13 +3,13 @@ package handlers
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/go-crud/pkg/forms"
-	"github.com/go-crud/pkg/repositories"
+	"github.com/go-crud/pkg/services"
 )
 
 type UserHandler struct{}
 
 func (u UserHandler) Index(c *gin.Context) {
-	users, err := repositories.UserRepository{}.Index()
+	users, err := services.UserService{}.Index()
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -21,7 +21,7 @@ func (u UserHandler) Index(c *gin.Context) {
 }
 
 func (u UserHandler) Show(c *gin.Context) {
-	user, err := repositories.UserRepository{}.Show(c.Param("user"))
+	user, err := services.UserService{}.Show(c.Param("user"))
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -40,7 +40,7 @@ func (u UserHandler) Store(c *gin.Context) {
 		return
 	}
 
-	user, err := repositories.UserRepository{}.Store(form)
+	user, err := services.UserService{}.Store(form)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -58,7 +58,7 @@ func (u UserHandler) Update(c *gin.Context) {
 		return
 	}
 
-	user, err := repositories.UserRepository{}.Update(c.Param("user"), form)
+	user, err := services.UserService{}.Update(c.Param("user"), form)
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
@@ -68,8 +68,26 @@ func (u UserHandler) Update(c *gin.Context) {
 	c.JSON(200, gin.H{"user": user})
 }
 
+func (u UserHandler) UpdatePassword(c *gin.Context) {
+	var form forms.UpdateUserPassword
+
+	if c.ShouldBind(&form) != nil {
+		c.JSON(400, gin.H{"error": "Invalid form"})
+		return
+	}
+
+	err := services.UserService{}.UpdatePassword(c.Param("user"), form)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, gin.H{"message": "Password updated"})
+}
+
 func (u UserHandler) Destroy(c *gin.Context) {
-	err := repositories.UserRepository{}.Destroy(c.Param("user"))
+	err := services.UserService{}.Delete(c.Param("user"))
 
 	if err != nil {
 		c.JSON(400, gin.H{"error": err.Error()})
